@@ -252,7 +252,6 @@ class HorseManagementSystem {
 
 public class Main {
     private static HorseManagementSystem hms = new HorseManagementSystem();
-    private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Horse Management System");
@@ -261,42 +260,50 @@ public class Main {
         frame.setLayout(new BorderLayout());
 
         JPanel menuPanel = new JPanel();
-        menuPanel.setLayout(new GridLayout(7, 1));
+        menuPanel.setLayout(new GridLayout(4, 1));
 
-        JButton addStaffButton = new JButton("Add Staff");
-        JButton addHorseButton = new JButton("Add Horse");
+        JButton addSubjectsButton = new JButton("Add Subjects");
+        JButton viewAllButton = new JButton("View All");
         JButton assignHorseButton = new JButton("Assign Horse to Staff");
-        JButton viewStaffButton = new JButton("View All Staff");
-        JButton viewHorsesButton = new JButton("View All Horses");
         JButton performDutiesButton = new JButton("Perform Duties");
-        JButton exitButton = new JButton("Exit");
 
-        addStaffButton.setPreferredSize(new Dimension(200, 40));
-        addHorseButton.setPreferredSize(new Dimension(200, 40));
+        addSubjectsButton.setPreferredSize(new Dimension(200, 40));
+        viewAllButton.setPreferredSize(new Dimension(200, 40));
         assignHorseButton.setPreferredSize(new Dimension(200, 40));
-        viewStaffButton.setPreferredSize(new Dimension(200, 40));
-        viewHorsesButton.setPreferredSize(new Dimension(200, 40));
         performDutiesButton.setPreferredSize(new Dimension(200, 40));
-        exitButton.setPreferredSize(new Dimension(200, 40));
 
-        addStaffButton.addActionListener(e -> showAddStaffPanel(frame));
-        addHorseButton.addActionListener(e -> showAddHorsePanel(frame));
+        addSubjectsButton.addActionListener(e -> showAddSubjectsPanel(frame));
+        viewAllButton.addActionListener(e -> showViewAllPanel(frame));
         assignHorseButton.addActionListener(e -> assignHorseToStaff(frame));
-        viewStaffButton.addActionListener(e -> showViewStaffPanel(frame));
-        viewHorsesButton.addActionListener(e -> showViewHorsesPanel(frame));
         performDutiesButton.addActionListener(e -> showDutiesPanel(frame));
-        exitButton.addActionListener(e -> System.exit(0));
 
-        menuPanel.add(addStaffButton);
-        menuPanel.add(addHorseButton);
+        menuPanel.add(addSubjectsButton);
+        menuPanel.add(viewAllButton);
         menuPanel.add(assignHorseButton);
-        menuPanel.add(viewStaffButton);
-        menuPanel.add(viewHorsesButton);
         menuPanel.add(performDutiesButton);
-        menuPanel.add(exitButton);
 
         frame.add(menuPanel, BorderLayout.WEST);
         frame.setVisible(true);
+    }
+
+    private static void showAddSubjectsPanel(JFrame frame) {
+        JFrame subjectsFrame = new JFrame("Add Subjects");
+        subjectsFrame.setSize(400, 200);
+        subjectsFrame.setLayout(new GridLayout(2, 1));
+
+        JButton addStaffButton = new JButton("Add Staff");
+        JButton addHorseButton = new JButton("Add Horse");
+
+        addStaffButton.setPreferredSize(new Dimension(200, 40));
+        addHorseButton.setPreferredSize(new Dimension(200, 40));
+
+        addStaffButton.addActionListener(e -> showAddStaffPanel(frame));
+        addHorseButton.addActionListener(e -> showAddHorsePanel(frame));
+
+        subjectsFrame.add(addStaffButton);
+        subjectsFrame.add(addHorseButton);
+
+        subjectsFrame.setVisible(true);
     }
 
     private static void showAddStaffPanel(JFrame frame) {
@@ -325,45 +332,63 @@ public class Main {
         ageField.setVisible(false);
         certificationLabel.setVisible(false);
         certificationBox.setVisible(false);
-        specialtyLabel.setVisible(false);
-        specialtyComboBox.setVisible(false);
 
         typeComboBox.addActionListener(e -> {
             String selectedType = (String) typeComboBox.getSelectedItem();
-            hoursLabel.setVisible("Trainer".equals(selectedType));
-            hoursField.setVisible("Trainer".equals(selectedType));
-            ageLabel.setVisible("Groomer".equals(selectedType));
-            ageField.setVisible("Groomer".equals(selectedType));
-            certificationLabel.setVisible("Ferrier".equals(selectedType));
-            certificationBox.setVisible("Ferrier".equals(selectedType));
-            specialtyLabel.setVisible(!"Ferrier".equals(selectedType));
-            specialtyComboBox.setVisible(!"Ferrier".equals(selectedType));
+            hoursLabel.setVisible(false);
+            hoursField.setVisible(false);
+            ageLabel.setVisible(false);
+            ageField.setVisible(false);
+            certificationLabel.setVisible(false);
+            certificationBox.setVisible(false);
+
+            switch (selectedType) {
+                case "Trainer":
+                    hoursLabel.setVisible(true);
+                    hoursField.setVisible(true);
+                    break;
+                case "Groomer":
+                    ageLabel.setVisible(true);
+                    ageField.setVisible(true);
+                    break;
+                case "Ferrier":
+                    certificationLabel.setVisible(true);
+                    certificationBox.setVisible(true);
+                    break;
+            }
         });
 
-        JButton addButton = new JButton("Add Staff");
-        addButton.addActionListener(e -> {
+        JButton submitButton = new JButton("Add Staff");
+        submitButton.addActionListener(e -> {
             String name = nameField.getText();
-            String type = (String) typeComboBox.getSelectedItem();
+            String selectedType = (String) typeComboBox.getSelectedItem();
             String specialty = (String) specialtyComboBox.getSelectedItem();
 
-            if ("Trainer".equals(type)) {
-                int trainingHours = Integer.parseInt(hoursField.getText());
-                hms.addStaff(new Trainer(name, specialty, trainingHours));
-            } else if ("Veterinarian".equals(type)) {
-                hms.addStaff(new Veterinarian(name, specialty));
-            } else if ("Groomer".equals(type)) {
-                int age = Integer.parseInt(ageField.getText());
-                if (age < 18) {
-                    JOptionPane.showMessageDialog(frame, "Groomers must be at least 18 years old.");
-                    return;
-                }
-                hms.addStaff(new Groomer(name, age, specialty));
-            } else if ("Ferrier".equals(type)) {
-                boolean isCertified = certificationBox.isSelected();
-                hms.addStaff(new Ferrier(name, isCertified));
+            Staff staff = null;
+            switch (selectedType) {
+                case "Trainer":
+                    int trainingHours = Integer.parseInt(hoursField.getText());
+                    staff = new Trainer(name, specialty, trainingHours);
+                    break;
+                case "Veterinarian":
+                    staff = new Veterinarian(name, specialty);
+                    break;
+                case "Groomer":
+                    int age = Integer.parseInt(ageField.getText());
+                    staff = new Groomer(name, age, specialty);
+                    break;
+                case "Ferrier":
+                    boolean hasCertification = certificationBox.isSelected();
+                    staff = new Ferrier(name, hasCertification);
+                    break;
             }
 
-            staffFrame.dispose();
+            if (staff != null) {
+                hms.addStaff(staff);
+                JOptionPane.showMessageDialog(staffFrame, "Staff added successfully.");
+            } else {
+                JOptionPane.showMessageDialog(staffFrame, "Failed to add staff.");
+            }
         });
 
         staffFrame.add(nameLabel);
@@ -379,7 +404,7 @@ public class Main {
         staffFrame.add(specialtyLabel);
         staffFrame.add(specialtyComboBox);
         staffFrame.add(new JLabel());
-        staffFrame.add(addButton);
+        staffFrame.add(submitButton);
 
         staffFrame.setVisible(true);
     }
@@ -396,14 +421,14 @@ public class Main {
         JLabel ageLabel = new JLabel("Age:");
         JTextField ageField = new JTextField();
         JLabel genderLabel = new JLabel("Gender:");
-        String[] genders = {"Stallion", "Mare", "Gelding"};
+        String[] genders = {"Male", "Female"};
         JComboBox<String> genderComboBox = new JComboBox<>(genders);
         JLabel specialtyLabel = new JLabel("Specialty:");
         String[] specialties = {"Dressage", "Jumping", "Eventing"};
         JComboBox<String> specialtyComboBox = new JComboBox<>(specialties);
 
-        JButton addButton = new JButton("Add Horse");
-        addButton.addActionListener(e -> {
+        JButton submitButton = new JButton("Add Horse");
+        submitButton.addActionListener(e -> {
             String name = nameField.getText();
             String breed = breedField.getText();
             int age = Integer.parseInt(ageField.getText());
@@ -412,7 +437,8 @@ public class Main {
 
             Horse horse = new Horse(name, breed, age, gender, specialty);
             hms.addHorse(horse);
-            horseFrame.dispose();
+
+            JOptionPane.showMessageDialog(horseFrame, "Horse added successfully.");
         });
 
         horseFrame.add(nameLabel);
@@ -426,27 +452,67 @@ public class Main {
         horseFrame.add(specialtyLabel);
         horseFrame.add(specialtyComboBox);
         horseFrame.add(new JLabel());
-        horseFrame.add(addButton);
+        horseFrame.add(submitButton);
 
         horseFrame.setVisible(true);
     }
 
+    private static void showViewAllPanel(JFrame frame) {
+        JFrame viewAllFrame = new JFrame("View All");
+        viewAllFrame.setSize(800, 600);
+        viewAllFrame.setLayout(new BorderLayout());
+
+        JTextArea displayArea = new JTextArea();
+        displayArea.setEditable(false);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Staff:\n");
+        for (Staff staff : hms.getStaffList()) {
+            sb.append(staff.getName()).append(", Specialty: ").append(staff.getSpecialty()).append("\n");
+        }
+        sb.append("\nHorses:\n");
+        for (Horse horse : hms.getHorseList()) {
+            sb.append(horse.getName()).append(", Breed: ").append(horse.getBreed())
+                    .append(", Age: ").append(horse.getAge())
+                    .append(", Gender: ").append(horse.getGender())
+                    .append(", Specialty: ").append(horse.getSpecialty())
+                    .append(", Assigned Staff: ")
+                    .append(horse.getAssignedStaff() != null ? horse.getAssignedStaff().getName() : "None")
+                    .append("\n");
+        }
+
+        displayArea.setText(sb.toString());
+
+        JScrollPane scrollPane = new JScrollPane(displayArea);
+        viewAllFrame.add(scrollPane, BorderLayout.CENTER);
+
+        viewAllFrame.setVisible(true);
+    }
+
     private static void assignHorseToStaff(JFrame frame) {
         JFrame assignFrame = new JFrame("Assign Horse to Staff");
-        assignFrame.setSize(400, 300);
-        assignFrame.setLayout(new GridLayout(4, 2));
+        assignFrame.setSize(400, 200);
+        assignFrame.setLayout(new GridLayout(3, 2));
 
         JLabel staffLabel = new JLabel("Select Staff:");
         JLabel horseLabel = new JLabel("Select Horse:");
 
+        List<Staff> staffList = hms.getStaffList();
+        List<Horse> horseList = hms.getHorseList();
+
+        if (staffList.isEmpty() || horseList.isEmpty()) {
+            JOptionPane.showMessageDialog(assignFrame, "No staff or horses available for assignment.");
+            return;
+        }
+
         JComboBox<String> staffComboBox = new JComboBox<>();
         JComboBox<String> horseComboBox = new JComboBox<>();
 
-        // Populate JComboBoxes with staff and horse names
-        for (Staff staff : hms.getStaffList()) {
+        for (Staff staff : staffList) {
             staffComboBox.addItem(staff.getName());
         }
-        for (Horse horse : hms.getHorseList()) {
+
+        for (Horse horse : horseList) {
             horseComboBox.addItem(horse.getName());
         }
 
@@ -459,32 +525,11 @@ public class Main {
             Horse selectedHorse = hms.findHorseByName(selectedHorseName);
 
             if (selectedStaff != null && selectedHorse != null) {
-                boolean canAssign = true;
-                StringBuilder message = new StringBuilder();
-
-                // Rule 1: Groom over age 50 cannot handle stallions
-                if (selectedStaff instanceof Groomer && ((Groomer) selectedStaff).getAge() > 50 && "Stallion".equals(selectedHorse.getGender())) {
-                    canAssign = false;
-                    message.append("Groomers over 50 cannot handle stallions.\n");
-                }
-
-                // Rule 2: Staff and horse specialty match, except for Eventing
-                if (!"Eventing".equals(selectedHorse.getSpecialty()) && !selectedHorse.getSpecialty().equals(selectedStaff.getSpecialty())) {
-                    canAssign = false;
-                    message.append("Staff and horse specialties do not match. Only Eventing horses can be worked on by any staff.\n");
-                }
-
-                // Assign horse if all rules are satisfied
-                if (canAssign) {
-                    selectedStaff.assignHorse(selectedHorse);
-                    JOptionPane.showMessageDialog(frame, "Horse assigned to staff successfully!");
-                } else {
-                    JOptionPane.showMessageDialog(frame, message.toString());
-                }
+                selectedStaff.assignHorse(selectedHorse);
+                JOptionPane.showMessageDialog(assignFrame, "Horse assigned to staff successfully.");
             } else {
-                JOptionPane.showMessageDialog(frame, "Error in assigning horse to staff. Please ensure both are selected correctly.");
+                JOptionPane.showMessageDialog(assignFrame, "Failed to assign horse to staff.");
             }
-            assignFrame.dispose();
         });
 
         assignFrame.add(staffLabel);
@@ -497,61 +542,26 @@ public class Main {
         assignFrame.setVisible(true);
     }
 
-    private static void showViewStaffPanel(JFrame frame) {
-        JFrame viewFrame = new JFrame("View All Staff");
-        viewFrame.setSize(400, 300);
-        viewFrame.setLayout(new BorderLayout());
-
-        JTextArea textArea = new JTextArea();
-        textArea.setEditable(false);
-        StringBuilder staffInfo = new StringBuilder();
-
-        for (Staff staff : hms.getStaffList()) {
-            staffInfo.append("Name: ").append(staff.getName()).append(", Type: ").append(staff.getClass().getSimpleName()).append(", Specialty: ").append(staff.getSpecialty()).append("\n");
-        }
-
-        textArea.setText(staffInfo.toString());
-
-        viewFrame.add(new JScrollPane(textArea), BorderLayout.CENTER);
-        viewFrame.setVisible(true);
-    }
-
-    private static void showViewHorsesPanel(JFrame frame) {
-        JFrame viewFrame = new JFrame("View All Horses");
-        viewFrame.setSize(400, 300);
-        viewFrame.setLayout(new BorderLayout());
-
-        JTextArea textArea = new JTextArea();
-        textArea.setEditable(false);
-        StringBuilder horseInfo = new StringBuilder();
-
-        for (Horse horse : hms.getHorseList()) {
-            horseInfo.append("Name: ").append(horse.getName()).append(", Breed: ").append(horse.getBreed()).append(", Age: ").append(horse.getAge()).append(", Gender: ").append(horse.getGender()).append(", Specialty: ").append(horse.getSpecialty()).append("\n");
-        }
-
-        textArea.setText(horseInfo.toString());
-
-        viewFrame.add(new JScrollPane(textArea), BorderLayout.CENTER);
-        viewFrame.setVisible(true);
-    }
-
     private static void showDutiesPanel(JFrame frame) {
         JFrame dutiesFrame = new JFrame("Perform Duties");
-        dutiesFrame.setSize(400, 300);
-        dutiesFrame.setLayout(new BorderLayout());
+        dutiesFrame.setSize(400, 200);
+        dutiesFrame.setLayout(new GridLayout(2, 1));
 
-        JTextArea textArea = new JTextArea();
-        textArea.setEditable(false);
-        StringBuilder dutiesInfo = new StringBuilder();
+        JTextArea displayArea = new JTextArea();
+        displayArea.setEditable(false);
 
+        StringBuilder sb = new StringBuilder();
         for (Staff staff : hms.getStaffList()) {
-            dutiesInfo.append(staff.getName()).append(" is performing duties.\n");
+            sb.append(staff.getName()).append(" is performing duties...\n");
             staff.performDuties();
+            sb.append("\n");
         }
 
-        textArea.setText(dutiesInfo.toString());
+        displayArea.setText(sb.toString());
 
-        dutiesFrame.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(displayArea);
+        dutiesFrame.add(scrollPane, BorderLayout.CENTER);
+
         dutiesFrame.setVisible(true);
     }
 }
